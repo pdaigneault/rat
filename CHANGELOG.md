@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/pdaigneault/rat/compare/v1.1.0...v1.1.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* rename module path to github.com/pdaigneault/rat ([#15](https://github.com/pdaigneault/rat/issues/15)) ([3f4102d](https://github.com/pdaigneault/rat/commit/3f4102dfc9a2f2f828c1765324c877569fcf54db))
+
 ## [1.1.0](https://github.com/pdaigneault/rat/compare/v1.0.0...v1.1.0) (2026-08-03)
 
 
