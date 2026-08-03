@@ -19,6 +19,7 @@ const (
 	keyChunkUp      = "]"
 	keyTheme        = "t"
 	keyAdaptive     = "a"
+	keyBrowse       = "f"
 	keyHelp         = "?"
 )
 
@@ -38,6 +39,7 @@ var helpEntries = []helpEntry{
 	{"[ ]", "chunk 1–3"},
 	{"t", "theme"},
 	{"a", "adaptive"},
+	{"f", "open file"},
 	{"?", "help"},
 	{"q/esc", "quit"},
 }

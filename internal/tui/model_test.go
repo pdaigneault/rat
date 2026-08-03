@@ -41,6 +41,39 @@ func TestSpaceTogglesPlaying(t *testing.T) {
 	}
 }
 
+// TestEmptyStartNoPlayback covers launching rat with no document: it must not
+// auto-play, schedule no ticks, and ignore playback keys.
+func TestEmptyStartNoPlayback(t *testing.T) {
+	m := New(nil, config.Defaults())
+	if m.hasDoc {
+		t.Fatal("no document expected when started empty")
+	}
+	if m.playing {
+		t.Fatal("should not auto-play with no document")
+	}
+	if cmd := m.Init(); cmd != nil {
+		t.Error("empty reader should schedule no tick")
+	}
+	updated, _ := m.Update(spaceKey)
+	if updated.(Model).playing {
+		t.Error("space must not start playback when there is no document")
+	}
+}
+
+// TestBrowseKeyOpensPicker confirms f opens the file picker from the empty state.
+func TestBrowseKeyOpensPicker(t *testing.T) {
+	m := New(nil, config.Defaults())
+	fKey := tea.KeyPressMsg{Code: 'f', Text: "f"}
+	updated, cmd := m.Update(fKey)
+	m2 := updated.(Model)
+	if !m2.browsing {
+		t.Error("f should open the file picker (browsing=true)")
+	}
+	if cmd == nil {
+		t.Error("opening the picker should return an init command to read the directory")
+	}
+}
+
 // TestQuitKeys confirms esc quits the reader just like q and ctrl+c: each should
 // yield a command that produces a tea.QuitMsg.
 func TestQuitKeys(t *testing.T) {

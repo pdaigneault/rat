@@ -28,8 +28,14 @@ func (m Model) View() tea.View {
 
 // render assembles the whole screen for the current state.
 func (m Model) render(th theme.Theme) string {
-	if !m.ready || len(m.chunks) == 0 {
+	if !m.ready {
 		return ""
+	}
+	if m.browsing {
+		return m.renderBrowser(th)
+	}
+	if !m.hasDoc || len(m.chunks) == 0 {
+		return m.renderEmpty(th)
 	}
 
 	textStyle := lipgloss.NewStyle().Foreground(th.Text)
@@ -59,6 +65,37 @@ func (m Model) render(th theme.Theme) string {
 	// shifts the pivot column between frames.
 	frame := lipgloss.NewStyle().Width(frameWidth).Render(strings.Join(lines, "\n"))
 	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, frame)
+}
+
+// renderEmpty is the screen shown when rat starts with no file: a centred prompt
+// pointing the user at the file picker.
+func (m Model) renderEmpty(th theme.Theme) string {
+	title := lipgloss.NewStyle().Foreground(th.Text).Bold(true).Render("rat")
+	pivot := lipgloss.NewStyle().Foreground(th.Pivot).Bold(true)
+	dim := lipgloss.NewStyle().Foreground(th.Dim)
+	body := strings.Join([]string{
+		title,
+		"",
+		dim.Render("no file loaded"),
+		"",
+		"press " + pivot.Render("f") + dim.Render(" to choose a file"),
+		dim.Render("q to quit"),
+	}, "\n")
+	block := lipgloss.NewStyle().Align(lipgloss.Center).Render(body)
+	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, block)
+}
+
+// renderBrowser draws the file picker with a title, a hint, and any transient
+// notice (such as an unreadable-file message).
+func (m Model) renderBrowser(th theme.Theme) string {
+	dim := lipgloss.NewStyle().Foreground(th.Dim)
+	title := lipgloss.NewStyle().Foreground(th.Frame).Bold(true).Render("Select a file")
+	hint := dim.Render("md · txt   ↑↓ move · enter open · esc cancel")
+	parts := []string{title, hint, "", m.picker.View()}
+	if m.notice != "" {
+		parts = append(parts, "", lipgloss.NewStyle().Foreground(th.Pivot).Render(m.notice))
+	}
+	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, strings.Join(parts, "\n"))
 }
 
 // renderWord lays out the current chunk with its pivot rune highlighted and the
