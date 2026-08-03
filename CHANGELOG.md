@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/pdaigneault/rat/compare/v1.2.0...v1.2.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* show --version in rat --help and document uninstall ([#21](https://github.com/pdaigneault/rat/issues/21)) ([9c9df82](https://github.com/pdaigneault/rat/commit/9c9df8233923df2934e1e224d87de97d7fe58640))
+
 ## [1.2.0](https://github.com/pdaigneault/rat/compare/v1.1.1...v1.2.0) (2026-08-03)
 
 
