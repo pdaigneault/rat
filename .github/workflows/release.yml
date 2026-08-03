@@ -16,7 +16,7 @@ jobs:
     steps:
       # Maintains a release PR from Conventional Commits. Merging that PR is what
       # sets release_created=true on a later run and produces the tag + release.
-      - uses: googleapis/release-please-action@v4
+      - uses: googleapis/release-please-action@v5
         id: release
         with:
           config-file: release-please-config.json
@@ -35,7 +35,7 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         if: ${{ steps.release.outputs.release_created }}
         with:
           version: "~> v2"
