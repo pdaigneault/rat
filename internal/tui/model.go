@@ -140,7 +140,7 @@ func (m Model) advance() (tea.Model, tea.Cmd) {
 // survives even an abrupt exit.
 func (m Model) handleKey(key string) (tea.Model, tea.Cmd) {
 	switch key {
-	case keyQuit, keyQuitCtrl:
+	case keyQuit, keyQuitCtrl, keyQuitEsc:
 		m.save()
 		return m, tea.Quit
 

@@ -7,6 +7,7 @@ const (
 	keyPlayPause    = "space" // Bubble Tea v2 stringifies the space key as "space", not " "
 	keyQuit         = "q"
 	keyQuitCtrl     = "ctrl+c"
+	keyQuitEsc      = "esc"
 	keySeekBack     = "left"
 	keySeekFwd      = "right"
 	keySentenceBack = "shift+left"
@@ -38,5 +39,5 @@ var helpEntries = []helpEntry{
 	{"t", "theme"},
 	{"a", "adaptive"},
 	{"?", "help"},
-	{"q", "quit"},
+	{"q/esc", "quit"},
 }

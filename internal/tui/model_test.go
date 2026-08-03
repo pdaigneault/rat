@@ -40,3 +40,27 @@ func TestSpaceTogglesPlaying(t *testing.T) {
 		t.Error("space should have resumed playback")
 	}
 }
+
+// TestQuitKeys confirms esc quits the reader just like q and ctrl+c: each should
+// yield a command that produces a tea.QuitMsg.
+func TestQuitKeys(t *testing.T) {
+	tokens := []parser.Token{{Text: "one"}, {Text: "two"}}
+	cases := map[string]tea.KeyPressMsg{
+		"q":      {Code: 'q', Text: "q"},
+		"ctrl+c": {Code: 'c', Mod: tea.ModCtrl},
+		"esc":    {Code: tea.KeyEscape},
+	}
+	for name, key := range cases {
+		if got := key.String(); got != name {
+			t.Fatalf("expected key %q to stringify to itself, got %q", name, got)
+		}
+		m := New(tokens, config.Defaults())
+		_, cmd := m.Update(key)
+		if cmd == nil {
+			t.Fatalf("%s: expected a quit command, got nil", name)
+		}
+		if _, ok := cmd().(tea.QuitMsg); !ok {
+			t.Errorf("%s: command did not produce a tea.QuitMsg", name)
+		}
+	}
+}
