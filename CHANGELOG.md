@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/pdaigneault/rat/compare/v1.0.0...v1.1.0) (2026-08-03)
+
+
+### Features
+
+* in-app file picker + r to restart ([#12](https://github.com/pdaigneault/rat/issues/12)) ([da23c02](https://github.com/pdaigneault/rat/commit/da23c02ddbc617478da5c4b44227ca45ae86607c))
+
 ## 1.0.0 (2026-08-03)
 
 
