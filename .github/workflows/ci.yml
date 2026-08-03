@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref (e.g. rapid pushes to a PR).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          # Read the exact Go version from go.mod (currently 1.25) so CI and
+          # local builds stay in lock-step.
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check (gofmt, vet, test)
+        run: make check
+
+      - name: Build
+        run: make build
