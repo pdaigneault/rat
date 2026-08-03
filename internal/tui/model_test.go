@@ -41,6 +41,22 @@ func TestSpaceTogglesPlaying(t *testing.T) {
 	}
 }
 
+// TestRestartKeys confirms both home and r jump playback back to the start.
+func TestRestartKeys(t *testing.T) {
+	tokens := []parser.Token{{Text: "one"}, {Text: "two"}, {Text: "three"}, {Text: "four"}}
+	for _, key := range []tea.KeyPressMsg{
+		{Code: tea.KeyHome},
+		{Code: 'r', Text: "r"},
+	} {
+		m := New(tokens, config.Defaults())
+		m.idx = 3 // pretend we've read to the end
+		restarted, _ := m.Update(key)
+		if got := restarted.(Model).idx; got != 0 {
+			t.Errorf("key %q: expected idx 0 after restart, got %d", key.String(), got)
+		}
+	}
+}
+
 // TestEmptyStartNoPlayback covers launching rat with no document: it must not
 // auto-play, schedule no ticks, and ignore playback keys.
 func TestEmptyStartNoPlayback(t *testing.T) {

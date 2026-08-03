@@ -247,7 +247,7 @@ func (m Model) handleKey(key string) (tea.Model, tea.Cmd) {
 	case keySentenceFwd:
 		m.seek(m.nextSentence())
 		return m, m.invalidate()
-	case keyRestart:
+	case keyRestart, keyRestartAlt:
 		m.seek(0)
 		return m, m.invalidate()
 

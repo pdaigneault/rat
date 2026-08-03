@@ -113,7 +113,7 @@ rat --wpm 450 --chunk 2 --theme solarized notes.md
 | `space`         | play / pause (restarts when finished)     |
 | `←` / `→`       | seek back / forward one chunk             |
 | `shift+←` / `→` | jump back / forward one sentence          |
-| `home`          | restart from the beginning                |
+| `home` / `r`    | restart from the beginning                |
 | `↑` / `↓`       | speed up / down by 25 wpm (clamped)       |
 | `[` / `]`       | fewer / more words per flash (1–3)        |
 | `t`             | cycle colour theme                        |
