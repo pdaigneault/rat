@@ -28,19 +28,46 @@ It uses the two classic RSVP (Rapid Serial Visual Presentation) techniques:
 
 ## Install
 
-Requires **Go 1.25+** (the Charm v2 TUI libraries set this floor).
+### Prebuilt binary (recommended)
+
+Grab the archive for your platform from the
+[latest release](https://github.com/pdaigneault/rat/releases/latest). Binaries
+are provided for **linux**, **macOS** (darwin) and **windows**, on **amd64** and
+**arm64**.
+
+macOS / Linux — download, extract, and put `rat` on your `PATH`:
 
 ```sh
-go install github.com/paul-daigneault/rat@latest
+VERSION=1.0.0
+OSARCH=linux_amd64   # or: linux_arm64, darwin_arm64, darwin_amd64
+curl -sSL "https://github.com/pdaigneault/rat/releases/download/v${VERSION}/rat_${VERSION}_${OSARCH}.tar.gz" \
+  | tar -xz rat
+sudo mv rat /usr/local/bin/
+rat --version
 ```
 
-Or from a clone:
+Windows: download `rat_<version>_windows_amd64.zip` from the releases page, unzip
+it, and add `rat.exe` to your `PATH`.
+
+Each release also ships a `checksums.txt` if you want to verify the download.
+
+### From source
+
+Requires **Go 1.25+** (the Charm v2 TUI libraries set this floor). Clone the repo
+and use the Makefile:
 
 ```sh
-make install    # into $GOBIN (or $GOPATH/bin)
-# or just build locally:
+git clone https://github.com/pdaigneault/rat.git
+cd rat
+make install    # build + install into $GOBIN (or $GOPATH/bin)
+# or just build locally without installing:
 make build      # produces ./bin/rat
 ```
+
+> **`go install`** directly from the module path isn't wired up yet: the Go
+> module is named `github.com/paul-daigneault/rat` while the repo lives at
+> `pdaigneault/rat`. Once those are aligned and a release is cut, `go install`
+> will work too — until then, use a prebuilt binary or build from source.
 
 ## Usage
 
