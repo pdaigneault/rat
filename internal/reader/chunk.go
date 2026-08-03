@@ -3,7 +3,7 @@ package reader
 import (
 	"strings"
 
-	"github.com/paul-daigneault/rat/internal/parser"
+	"github.com/pdaigneault/rat/internal/parser"
 )
 
 // Chunk is a group of one to three words flashed together. Boundary is the

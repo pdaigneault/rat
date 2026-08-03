@@ -1,4 +1,4 @@
-module github.com/paul-daigneault/rat
+module github.com/pdaigneault/rat
 
 go 1.25.0
 

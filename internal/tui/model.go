@@ -8,10 +8,10 @@ import (
 	"charm.land/bubbles/v2/progress"
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/paul-daigneault/rat/internal/config"
-	"github.com/paul-daigneault/rat/internal/parser"
-	"github.com/paul-daigneault/rat/internal/reader"
-	"github.com/paul-daigneault/rat/internal/theme"
+	"github.com/pdaigneault/rat/internal/config"
+	"github.com/pdaigneault/rat/internal/parser"
+	"github.com/pdaigneault/rat/internal/reader"
+	"github.com/pdaigneault/rat/internal/theme"
 )
 
 // wpmStep is how much ↑/↓ change the speed by.

@@ -3,7 +3,7 @@ package reader
 import (
 	"testing"
 
-	"github.com/paul-daigneault/rat/internal/parser"
+	"github.com/pdaigneault/rat/internal/parser"
 )
 
 func TestDelayScalesWithWordCount(t *testing.T) {

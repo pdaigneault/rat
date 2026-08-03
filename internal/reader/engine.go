@@ -4,7 +4,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/paul-daigneault/rat/internal/parser"
+	"github.com/pdaigneault/rat/internal/parser"
 )
 
 // Pacing constants for adaptive mode. Named so they are easy to tune. Each is

@@ -7,8 +7,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
-	"github.com/paul-daigneault/rat/internal/reader"
-	"github.com/paul-daigneault/rat/internal/theme"
+	"github.com/pdaigneault/rat/internal/reader"
+	"github.com/pdaigneault/rat/internal/theme"
 )
 
 // anchorCol is the fixed column (within the frame) where the ORP pivot rune sits.
