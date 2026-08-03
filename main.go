@@ -6,12 +6,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
-	"strings"
-
 	"runtime/debug"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 
@@ -67,73 +64,63 @@ func run() error {
 	}
 	applyFlags(&cfg, *wpm, *chunk, *themeName, *adaptive)
 
-	src, name, ttyInput, err := resolveInput(flag.Arg(0))
+	tokens, ttyInput, err := loadInput(flag.Arg(0))
 	if err != nil {
 		return err
 	}
-	defer src.Close()
 
-	tokens, err := selectParser(name).Parse(src)
-	if err != nil {
-		return fmt.Errorf("parsing %s: %w", name, err)
-	}
-	if len(tokens) == 0 {
-		return fmt.Errorf("no readable text found in %s", displayName(name))
-	}
-
-	opts := []tea.ProgramOption{}
+	var opts []tea.ProgramOption
 	if ttyInput != nil {
-		// Content came from a pipe, so stdin is the document, not the keyboard.
-		// Read keystrokes from the controlling terminal instead.
+		// The document came from a pipe, so stdin is not the keyboard; read
+		// keystrokes from the controlling terminal instead.
+		defer ttyInput.Close()
 		opts = append(opts, tea.WithInput(ttyInput))
 	}
+	// tokens may be nil: rat then starts empty and the user picks a file with f.
 	p := tea.NewProgram(tui.New(tokens, cfg), opts...)
 	_, err = p.Run()
 	return err
 }
 
-// resolveInput decides where the document comes from and returns a reader for
-// it, its name (for parser selection), and — when the document arrived on a pipe
-// — an open /dev/tty to read keystrokes from. Callers must Close the reader.
-func resolveInput(arg string) (src io.ReadCloser, name string, ttyInput *os.File, err error) {
+// loadInput resolves the document to read. It returns the parsed tokens — nil
+// when rat is launched interactively with no file, so the in-app picker takes
+// over — and, when the document arrived on a pipe, an open /dev/tty for
+// keystrokes (the caller owns closing it).
+func loadInput(arg string) (tokens []parser.Token, ttyInput *os.File, err error) {
 	if arg != "" {
-		f, err := os.Open(arg)
+		tokens, err = parser.ParseFile(arg)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, nil, err
 		}
-		return f, arg, nil, nil
+		if len(tokens) == 0 {
+			return nil, nil, fmt.Errorf("no readable text found in %s", arg)
+		}
+		return tokens, nil, nil
 	}
 
-	// No file argument: read from stdin only if it is piped (not a terminal).
-	info, statErr := os.Stdin.Stat()
-	if statErr != nil {
-		return nil, "", nil, statErr
+	info, err := os.Stdin.Stat()
+	if err != nil {
+		return nil, nil, err
 	}
 	if info.Mode()&os.ModeCharDevice != 0 {
-		// stdin is a terminal and no file was given: nothing to read.
-		usage()
-		return nil, "", nil, fmt.Errorf("no input: provide a file or pipe text in")
+		// Interactive terminal with no file: start empty; the user presses f.
+		return nil, nil, nil
 	}
 
-	// Piped input: buffer stdin as the document, then take over the keyboard via
-	// the controlling terminal so the TUI stays interactive.
+	// Piped input: read stdin as the document, then take the keyboard from the
+	// controlling terminal so the reader stays interactive.
+	tokens, err = parser.Markdown{}.Parse(os.Stdin)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing stdin: %w", err)
+	}
+	if len(tokens) == 0 {
+		return nil, nil, fmt.Errorf("no readable text found on stdin")
+	}
 	tty, err := os.Open("/dev/tty")
 	if err != nil {
-		return nil, "", nil, fmt.Errorf("piped input needs a terminal for controls: %w", err)
+		return nil, nil, fmt.Errorf("piped input needs a terminal for controls: %w", err)
 	}
-	return os.Stdin, "", tty, nil
-}
-
-// selectParser picks a Parser by file extension, defaulting to markdown. Piped
-// input (empty name) is treated as markdown too, which degrades gracefully to
-// plain prose for non-markdown text.
-func selectParser(name string) parser.Parser {
-	switch strings.ToLower(filepath.Ext(name)) {
-	case ".txt", ".text":
-		return parser.PlainText{}
-	default:
-		return parser.Markdown{}
-	}
+	return tokens, tty, nil
 }
 
 // applyFlags overlays any explicitly-set flags onto the config, clamping to the
@@ -156,13 +143,6 @@ func applyFlags(cfg *config.Config, wpm, chunk int, themeName, adaptive string) 
 	}
 }
 
-func displayName(name string) string {
-	if name == "" {
-		return "stdin"
-	}
-	return name
-}
-
 func clamp(v, lo, hi int) int {
 	if v < lo {
 		return lo
@@ -180,6 +160,8 @@ Usage:
   rat [flags] [file]
   cat file.md | rat [flags]
 
+With no file and no piped input, rat opens a file picker — press f to choose.
+
 Flags:
   --wpm N        words per minute (100-1000)
   --chunk N      words per flash (1-3)
@@ -187,6 +169,6 @@ Flags:
   --adaptive B   true or false — longer pauses at punctuation and long words
 
 Controls (in-reader, press ? for the full list):
-  space play/pause · ←/→ seek · ↑/↓ speed · [ ] chunk · t theme · a adaptive · q quit
+  space play/pause · ←/→ seek · ↑/↓ speed · [ ] chunk · t theme · a adaptive · f file · q quit
 `)
 }

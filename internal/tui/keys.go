@@ -13,12 +13,14 @@ const (
 	keySentenceBack = "shift+left"
 	keySentenceFwd  = "shift+right"
 	keyRestart      = "home"
+	keyRestartAlt   = "r"
 	keyFaster       = "up"
 	keySlower       = "down"
 	keyChunkDown    = "["
 	keyChunkUp      = "]"
 	keyTheme        = "t"
 	keyAdaptive     = "a"
+	keyBrowse       = "f"
 	keyHelp         = "?"
 )
 
@@ -33,11 +35,12 @@ var helpEntries = []helpEntry{
 	{"space", "play/pause"},
 	{"←/→", "seek ±1"},
 	{"⇧←/→", "±1 sentence"},
-	{"home", "restart"},
+	{"home/r", "restart"},
 	{"↑/↓", "speed ±25"},
 	{"[ ]", "chunk 1–3"},
 	{"t", "theme"},
 	{"a", "adaptive"},
+	{"f", "open file"},
 	{"?", "help"},
 	{"q/esc", "quit"},
 }

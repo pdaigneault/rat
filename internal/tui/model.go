@@ -41,6 +41,14 @@ type Model struct {
 	themeName string
 	showHelp  bool
 
+	// hasDoc is false when rat is launched with no file/stdin: the reader shows
+	// an empty prompt and waits for the user to pick a file. browsing is true
+	// while the file explorer is open.
+	hasDoc   bool
+	browsing bool
+	explorer explorer
+	notice   string // transient message shown in the explorer (e.g. a read error)
+
 	epoch int // bumped whenever timing is invalidated; guards stale ticks
 
 	prog  progress.Model
@@ -49,12 +57,16 @@ type Model struct {
 	cfg   config.Config
 }
 
-// New builds a Model from a parsed token stream and the loaded config.
+// New builds a Model from a parsed token stream and the loaded config. Passing
+// no tokens (nil/empty) starts the reader in its empty state, where the user can
+// press f to pick a file.
 func New(tokens []parser.Token, cfg config.Config) Model {
+	hasDoc := len(tokens) > 0
 	m := Model{
 		tokens:    tokens,
 		idx:       0,
-		playing:   true,
+		hasDoc:    hasDoc,
+		playing:   hasDoc, // only auto-play when there's something to read
 		wpm:       cfg.WPM,
 		chunkSize: cfg.ChunkSize,
 		adaptive:  cfg.Adaptive,
@@ -87,7 +99,7 @@ func (m Model) Init() tea.Cmd {
 // tagged with the current epoch. It returns nil when playback is not running,
 // so a paused or finished reader schedules nothing.
 func (m Model) scheduleTick() tea.Cmd {
-	if !m.playing || m.finished || len(m.chunks) == 0 {
+	if !m.playing || m.finished || m.browsing || !m.hasDoc || len(m.chunks) == 0 {
 		return nil
 	}
 	d := reader.Delay(m.chunks[m.idx], m.wpm, m.adaptive)
@@ -119,7 +131,49 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.advance()
 
 	case tea.KeyPressMsg:
+		if m.browsing {
+			return m.updateBrowsing(msg)
+		}
 		return m.handleKey(msg.String())
+	}
+	return m, nil
+}
+
+// updateBrowsing handles input while the file explorer is open: esc cancels back
+// to the previous state, navigation keys move around the tree, and enter either
+// descends into a directory or loads the chosen file and starts reading.
+func (m Model) updateBrowsing(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case keyQuitEsc:
+		m.browsing = false
+		m.notice = ""
+		return m, m.scheduleTick() // resume playback if a doc was already loaded
+
+	case "up", "k", "ctrl+p":
+		m.explorer.moveUp()
+	case "down", "j", "ctrl+n":
+		m.explorer.moveDown()
+	case "left", "h", "backspace":
+		m.explorer.ascend()
+
+	case "enter", "right", "l":
+		if path, selected := m.explorer.enter(); selected {
+			tokens, err := parser.ParseFile(path)
+			if err != nil || len(tokens) == 0 {
+				m.notice = "can't read that file — pick another"
+				return m, nil
+			}
+			m.tokens = tokens
+			m.chunks = reader.Group(tokens, m.chunkSize)
+			m.idx = 0
+			m.finished = false
+			m.hasDoc = true
+			m.playing = true
+			m.browsing = false
+			m.notice = ""
+			return m, m.invalidate()
+		}
+		m.notice = "" // descended into a directory
 	}
 	return m, nil
 }
@@ -139,11 +193,24 @@ func (m Model) advance() (tea.Model, tea.Cmd) {
 // handleKey applies a keypress. Mutating keys persist the config so a choice
 // survives even an abrupt exit.
 func (m Model) handleKey(key string) (tea.Model, tea.Cmd) {
+	// Keys available in every state, including the empty (no-document) screen.
 	switch key {
 	case keyQuit, keyQuitCtrl, keyQuitEsc:
 		m.save()
 		return m, tea.Quit
+	case keyHelp:
+		m.showHelp = !m.showHelp
+		return m, nil
+	case keyBrowse:
+		return m.openPicker()
+	}
 
+	// The remaining keys only make sense once a document is loaded.
+	if !m.hasDoc {
+		return m, nil
+	}
+
+	switch key {
 	case keyPlayPause:
 		if m.finished {
 			// Restart from the top when finished.
@@ -165,7 +232,7 @@ func (m Model) handleKey(key string) (tea.Model, tea.Cmd) {
 	case keySentenceFwd:
 		m.seek(m.nextSentence())
 		return m, m.invalidate()
-	case keyRestart:
+	case keyRestart, keyRestartAlt:
 		m.seek(0)
 		return m, m.invalidate()
 
@@ -194,11 +261,16 @@ func (m Model) handleKey(key string) (tea.Model, tea.Cmd) {
 		m.adaptive = !m.adaptive
 		m.save()
 		return m, m.invalidate()
-
-	case keyHelp:
-		m.showHelp = !m.showHelp
-		return m, nil
 	}
+	return m, nil
+}
+
+// openPicker suspends playback and opens the file explorer over the current view.
+func (m Model) openPicker() (tea.Model, tea.Cmd) {
+	m.browsing = true
+	m.notice = ""
+	m.explorer = newExplorer(startDir())
+	m.epoch++ // invalidate any in-flight playback tick while browsing
 	return m, nil
 }
 

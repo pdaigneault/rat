@@ -28,8 +28,14 @@ func (m Model) View() tea.View {
 
 // render assembles the whole screen for the current state.
 func (m Model) render(th theme.Theme) string {
-	if !m.ready || len(m.chunks) == 0 {
+	if !m.ready {
 		return ""
+	}
+	if m.browsing {
+		return m.renderBrowser(th)
+	}
+	if !m.hasDoc || len(m.chunks) == 0 {
+		return m.renderEmpty(th)
 	}
 
 	textStyle := lipgloss.NewStyle().Foreground(th.Text)
@@ -59,6 +65,105 @@ func (m Model) render(th theme.Theme) string {
 	// shifts the pivot column between frames.
 	frame := lipgloss.NewStyle().Width(frameWidth).Render(strings.Join(lines, "\n"))
 	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, frame)
+}
+
+// renderEmpty is the screen shown when rat starts with no file: a centred prompt
+// pointing the user at the file picker.
+func (m Model) renderEmpty(th theme.Theme) string {
+	title := lipgloss.NewStyle().Foreground(th.Text).Bold(true).Render("rat")
+	pivot := lipgloss.NewStyle().Foreground(th.Pivot).Bold(true)
+	dim := lipgloss.NewStyle().Foreground(th.Dim)
+	body := strings.Join([]string{
+		title,
+		"",
+		dim.Render("no file loaded"),
+		"",
+		"press " + pivot.Render("f") + dim.Render(" to choose a file"),
+		dim.Render("q to quit"),
+	}, "\n")
+	block := lipgloss.NewStyle().Align(lipgloss.Center).Render(body)
+	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, block)
+}
+
+// browserWidth is the fixed width of the file-explorer panel.
+const browserWidth = 52
+
+// renderBrowser draws the file explorer: the current directory, the filtered
+// entry list with a cursor, a key hint, and any transient notice.
+func (m Model) renderBrowser(th theme.Theme) string {
+	dim := lipgloss.NewStyle().Foreground(th.Dim)
+	dirStyle := lipgloss.NewStyle().Foreground(th.Frame).Bold(true)
+	cursorStyle := lipgloss.NewStyle().Foreground(th.Pivot).Bold(true)
+	pivotStyle := lipgloss.NewStyle().Foreground(th.Pivot)
+
+	e := m.explorer
+	header := dirStyle.Render(truncLeft(compactPath(e.dir), browserWidth-2))
+	hint := dim.Render("↑↓ move · → open · ← up · enter select · esc cancel")
+
+	// Reserve rows for the header, hint, notice and padding.
+	maxRows := m.h - 8
+	if maxRows < 3 {
+		maxRows = 3
+	}
+	start, end := scrollWindow(e.cursor, len(e.entries), maxRows)
+
+	var rows []string
+	if len(e.entries) == 0 {
+		rows = append(rows, dim.Render("(no folders or supported files here)"))
+	}
+	for i := start; i < end; i++ {
+		en := e.entries[i]
+		label := en.name
+		if en.isDir {
+			label += "/"
+		}
+		style := lipgloss.NewStyle().Foreground(th.Text)
+		if en.isDir {
+			style = lipgloss.NewStyle().Foreground(th.Frame)
+		}
+		prefix := "  "
+		if i == e.cursor {
+			prefix = cursorStyle.Render("▸ ")
+			style = style.Bold(true)
+		}
+		rows = append(rows, prefix+style.Render(label))
+	}
+
+	parts := []string{header, "", strings.Join(rows, "\n"), "", hint}
+	if e.failed != "" {
+		parts = append(parts, pivotStyle.Render(e.failed))
+	}
+	if m.notice != "" {
+		parts = append(parts, pivotStyle.Render(m.notice))
+	}
+	panel := lipgloss.NewStyle().Width(min(browserWidth, m.w)).Render(strings.Join(parts, "\n"))
+	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, panel)
+}
+
+// scrollWindow returns the [start,end) slice of a list of length n to display in
+// rows lines, keeping the cursor roughly centred.
+func scrollWindow(cursor, n, rows int) (int, int) {
+	if n <= rows {
+		return 0, n
+	}
+	start := cursor - rows/2
+	if start < 0 {
+		start = 0
+	}
+	if start+rows > n {
+		start = n - rows
+	}
+	return start, start + rows
+}
+
+// truncLeft trims s from the left to at most max display columns, prefixing an
+// ellipsis — so a long path keeps its most specific (rightmost) part visible.
+func truncLeft(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	return "…" + string(r[len(r)-(max-1):])
 }
 
 // renderWord lays out the current chunk with its pivot rune highlighted and the

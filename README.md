@@ -80,6 +80,10 @@ Give it a file, or pipe text in. When you pipe, `rat` reads the document from
 stdin and takes keyboard control from your terminal (`/dev/tty`), so the
 controls still work.
 
+Run `rat` with **no file and no pipe** and it opens on an empty screen — press
+`f` to bring up a built-in file picker (filtered to supported types) and choose
+what to read. You can also press `f` at any time to open a different file.
+
 Input format is chosen by extension: `.txt`/`.text` are read as plain prose,
 everything else is parsed as **markdown** — syntax is stripped to clean prose,
 and code blocks, code spans, tables, images and raw HTML are skipped. Link text
@@ -109,11 +113,12 @@ rat --wpm 450 --chunk 2 --theme solarized notes.md
 | `space`         | play / pause (restarts when finished)     |
 | `←` / `→`       | seek back / forward one chunk             |
 | `shift+←` / `→` | jump back / forward one sentence          |
-| `home`          | restart from the beginning                |
+| `home` / `r`    | restart from the beginning                |
 | `↑` / `↓`       | speed up / down by 25 wpm (clamped)       |
 | `[` / `]`       | fewer / more words per flash (1–3)        |
 | `t`             | cycle colour theme                        |
 | `a`             | toggle adaptive pacing                    |
+| `f`             | open the file picker to choose a document |
 | `?`             | toggle the help footer                    |
 | `q` / `ctrl+c`  | quit                                      |
 
