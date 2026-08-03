@@ -85,6 +85,35 @@ make install    # build + install into $GOBIN (or $GOPATH/bin)
 make build      # produces ./bin/rat
 ```
 
+## Uninstall
+
+Remove `rat` the same way you installed it.
+
+**Prebuilt binary** — delete it from wherever you put it on your `PATH`:
+
+```sh
+sudo rm /usr/local/bin/rat
+```
+
+**`go install` / `make install`** — remove it from the Go bin directory (resolved
+the same way the Makefile does, `$GOBIN` then `$GOPATH/bin`):
+
+```sh
+BIN="$(go env GOBIN)"; BIN="${BIN:-$(go env GOPATH)/bin}"
+rm -f "$BIN/rat"
+```
+
+From a clone you can just run `make uninstall`.
+
+**Windows** — delete `rat.exe` from wherever you placed it on your `PATH`.
+
+**Remove saved preferences (optional)** — the config lives at
+`~/.config/rat/config.toml` (honouring `$XDG_CONFIG_HOME`):
+
+```sh
+rm -rf ~/.config/rat
+```
+
 ## Usage
 
 ```sh
@@ -197,6 +226,7 @@ make check       # fmt-check + vet + test (CI gate)
 make cover       # test coverage summary
 make fmt         # gofmt -w .
 make tidy        # go mod tidy
+make uninstall   # remove the installed binary
 make clean       # remove build artefacts
 ```
 
