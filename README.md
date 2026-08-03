@@ -43,12 +43,15 @@ Grab the archive for your platform from the
 are provided for **linux**, **macOS** (darwin) and **windows**, on **amd64** and
 **arm64**.
 
-macOS / Linux — download, extract, and put `rat` on your `PATH`:
+macOS / Linux — resolve the latest release, download, extract, and put `rat` on
+your `PATH`:
 
 ```sh
-VERSION=1.0.0
+REPO=pdaigneault/rat
 OSARCH=linux_amd64   # or: linux_arm64, darwin_arm64, darwin_amd64
-curl -sSL "https://github.com/pdaigneault/rat/releases/download/v${VERSION}/rat_${VERSION}_${OSARCH}.tar.gz" \
+TAG=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
+  | grep -oE '"tag_name": *"[^"]+"' | head -1 | cut -d'"' -f4)
+curl -fsSL "https://github.com/${REPO}/releases/download/${TAG}/rat_${TAG#v}_${OSARCH}.tar.gz" \
   | tar -xz rat
 sudo mv rat /usr/local/bin/
 rat --version
