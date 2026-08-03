@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/paul-daigneault/rat/internal/parser"
+	"github.com/pdaigneault/rat/internal/parser"
 )
 
 // fileEntry is one row in the explorer: a directory or a supported file.

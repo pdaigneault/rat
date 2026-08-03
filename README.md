@@ -59,10 +59,20 @@ it, and add `rat.exe` to your `PATH`.
 
 Each release also ships a `checksums.txt` if you want to verify the download.
 
+### With `go install`
+
+Requires **Go 1.25+** (the Charm v2 TUI libraries set this floor):
+
+```sh
+go install github.com/pdaigneault/rat@latest
+```
+
+(Available from **v1.1.1** onward — the first release carrying the module path
+that matches this repo.)
+
 ### From source
 
-Requires **Go 1.25+** (the Charm v2 TUI libraries set this floor). Clone the repo
-and use the Makefile:
+Clone the repo and use the Makefile:
 
 ```sh
 git clone https://github.com/pdaigneault/rat.git
@@ -71,11 +81,6 @@ make install    # build + install into $GOBIN (or $GOPATH/bin)
 # or just build locally without installing:
 make build      # produces ./bin/rat
 ```
-
-> **`go install`** directly from the module path isn't wired up yet: the Go
-> module is named `github.com/paul-daigneault/rat` while the repo lives at
-> `pdaigneault/rat`. Once those are aligned and a release is cut, `go install`
-> will work too — until then, use a prebuilt binary or build from source.
 
 ## Usage
 

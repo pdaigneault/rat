@@ -12,9 +12,9 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/paul-daigneault/rat/internal/config"
-	"github.com/paul-daigneault/rat/internal/parser"
-	"github.com/paul-daigneault/rat/internal/tui"
+	"github.com/pdaigneault/rat/internal/config"
+	"github.com/pdaigneault/rat/internal/parser"
+	"github.com/pdaigneault/rat/internal/tui"
 )
 
 // version is set at build time via -ldflags "-X main.version=..." (GoReleaser

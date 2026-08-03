@@ -5,8 +5,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
-	"github.com/paul-daigneault/rat/internal/config"
-	"github.com/paul-daigneault/rat/internal/parser"
+	"github.com/pdaigneault/rat/internal/config"
+	"github.com/pdaigneault/rat/internal/parser"
 )
 
 // spaceKey is the message Bubble Tea delivers for a space keypress.
