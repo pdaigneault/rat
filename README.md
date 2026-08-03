@@ -26,6 +26,14 @@ It uses the two classic RSVP (Rapid Serial Visual Presentation) techniques:
   ? help
 ```
 
+> [!NOTE]
+> **`rat` is an AI-first codebase.** It was designed, written, tested,
+> documented, and maintained almost entirely by an AI coding agent (Anthropic's
+> Claude, via Claude Code), working from human prompts with a human directing the
+> work and reviewing/approving each change. It's shared, in part, as an honest
+> example of AI-led development — worth keeping in mind when reading the code or
+> weighing it for production use.
+
 ## Install
 
 ### Prebuilt binary (recommended)
