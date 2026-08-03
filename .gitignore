@@ -1,0 +1,34 @@
+# Compiled binary (built by `make build` / `go build -o rat`)
+/rat
+
+# Test & coverage output
+coverage.out
+*.out
+*.test
+*.prof
+
+# Go workspace files
+go.work
+go.work.sum
+
+# Editor / IDE
+.idea
+.idea/
+.vscode
+.vscode/
+*.swp
+*~
+
+# OS cruft
+.DS_Store
+
+# Environment shell/config files mounted into the workspace root
+.bash_profile
+.bashrc
+.gitconfig
+.gitmodules
+.mcp.json
+.profile
+.ripgreprc
+.zprofile
+.zshrc
