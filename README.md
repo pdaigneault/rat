@@ -35,7 +35,7 @@ Or from a clone:
 ```sh
 make install    # into $GOBIN (or $GOPATH/bin)
 # or just build locally:
-make build      # produces ./rat
+make build      # produces ./bin/rat
 ```
 
 ## Usage
@@ -125,7 +125,7 @@ Defaults: `wpm 300`, `chunk_size 1`, `theme dark`, `adaptive true`.
 
 ```sh
 make help        # list all targets
-make build       # compile ./rat
+make build       # compile ./bin/rat
 make run         # build and play testdata/sample.md
 make test        # unit tests
 make check       # fmt-check + vet + test (CI gate)

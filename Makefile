@@ -2,7 +2,8 @@
 #
 # Common tasks. Run `make help` for the list.
 
-BINARY      := rat
+BIN_DIR     := bin
+BINARY      := $(BIN_DIR)/rat
 PKG         := ./...
 MAIN        := .
 INSTALL_DIR ?= $(shell go env GOBIN)
@@ -19,9 +20,10 @@ SAMPLE  := testdata/sample.md
 
 .DEFAULT_GOAL := build
 
-## build: compile the binary into ./rat
+## build: compile the binary into ./bin/rat
 .PHONY: build
 build:
+	@mkdir -p $(BIN_DIR)
 	$(GO) build -ldflags '$(LDFLAGS)' -o $(BINARY) $(MAIN)
 
 ## run: build and play the sample document
@@ -75,7 +77,7 @@ install:
 ## clean: remove build artefacts
 .PHONY: clean
 clean:
-	rm -f $(BINARY) coverage.out
+	rm -rf $(BIN_DIR) coverage.out
 
 ## help: list available targets
 .PHONY: help
