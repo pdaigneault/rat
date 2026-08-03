@@ -1,4 +1,8 @@
-# rat
+<p align="center">
+  <img src="assets/rat-logo.svg" alt="rat logo" width="160" height="160">
+</p>
+
+<h1 align="center">rat</h1>
 
 A `cat` for people in a hurry. Instead of dumping a file to your terminal, `rat`
 plays it back as a **speed reader** — flashing one small chunk of words at a
