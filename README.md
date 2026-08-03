@@ -163,6 +163,27 @@ stays cheap to add.
 [BurntSushi/toml](https://github.com/BurntSushi/toml) ·
 [adrg/xdg](https://github.com/adrg/xdg)
 
+## Releases
+
+`rat` follows [Semantic Versioning](https://semver.org) and releases are
+automated with [release-please](https://github.com/googleapis/release-please)
+and [GoReleaser](https://goreleaser.com), driven by
+[Conventional Commit](https://www.conventionalcommits.org) messages.
+
+The flow:
+
+1. Merge feature PRs to `main` using Conventional Commit titles
+   (`feat:` → minor bump, `fix:` → patch, `feat!:`/`BREAKING CHANGE` → major).
+2. A bot keeps an open **"chore(main): release x.y.z"** pull request up to date,
+   accumulating the version bump and `CHANGELOG.md` entries.
+3. **Merge that release PR** when you want to ship. That tags `vX.Y.Z`, publishes
+   the GitHub Release with notes, and GoReleaser attaches cross-compiled binaries
+   (linux/macOS/windows, amd64/arm64) plus checksums.
+
+Grab a prebuilt binary from the
+[Releases page](https://github.com/pdaigneault/rat/releases), or build from
+source (see [Install](#install)).
+
 ## License
 
 Released under the [MIT License](LICENSE) — © 2026 Paul Daigneault.

@@ -1,0 +1,51 @@
+# GoReleaser configuration for rat.
+# Docs: https://goreleaser.com — validate locally with `goreleaser check`.
+version: 2
+
+project_name: rat
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: rat
+    main: .
+    binary: rat
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    # Trim paths and inject the release version into main.version.
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    # Windows users expect a zip.
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+
+checksum:
+  name_template: checksums.txt
+
+# release-please owns the CHANGELOG and the GitHub Release notes, so GoReleaser
+# only appends build artefacts to the release it already created.
+changelog:
+  disable: true
+
+release:
+  mode: append

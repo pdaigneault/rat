@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"runtime/debug"
+
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/paul-daigneault/rat/internal/config"
@@ -18,9 +20,23 @@ import (
 	"github.com/paul-daigneault/rat/internal/tui"
 )
 
-// version is set at build time via -ldflags "-X main.version=...". It defaults
-// to "dev" for `go run` and plain `go build` invocations.
+// version is set at build time via -ldflags "-X main.version=..." (GoReleaser
+// and the Makefile do this). It defaults to "dev"; see versionString for the
+// fallback used by `go install`-based builds.
 var version = "dev"
+
+// versionString resolves the version to report. A build-time ldflag wins; when
+// it's absent (a plain `go install github.com/.../rat@v1.2.3`), we recover the
+// module version Go recorded in the binary's build info instead of "dev".
+func versionString() string {
+	if version != "dev" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return version
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -41,7 +57,7 @@ func run() error {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Println("rat", version)
+		fmt.Println("rat", versionString())
 		return nil
 	}
 
