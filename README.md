@@ -158,3 +158,7 @@ stays cheap to add.
 [Bubbles](https://charm.land) · [goldmark](https://github.com/yuin/goldmark) ·
 [BurntSushi/toml](https://github.com/BurntSushi/toml) ·
 [adrg/xdg](https://github.com/adrg/xdg)
+
+## License
+
+Released under the [MIT License](LICENSE) — © 2026 Paul Daigneault.
