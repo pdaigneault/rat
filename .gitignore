@@ -1,6 +1,9 @@
 # Compiled binary output directory (make build -> ./bin/rat)
 /bin/
 
+# GoReleaser build output
+/dist/
+
 # Test & coverage output
 coverage.out
 *.out
