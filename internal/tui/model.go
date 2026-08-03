@@ -17,6 +17,14 @@ import (
 // wpmStep is how much ↑/↓ change the speed by.
 const wpmStep = 25
 
+// Warm-up ramp: when enabled and the target speed exceeds the 300 wpm default,
+// playback starts at the default and adds rampStep wpm every rampStepEvery
+// chunks until the target is reached.
+const (
+	rampStep      = wpmStep
+	rampStepEvery = 5
+)
+
 // frameWidth is the fixed width of the reading frame. A constant width keeps the
 // ORP pivot in the same screen column for every word — the whole point of a
 // gaze anchor.
@@ -35,11 +43,18 @@ type Model struct {
 	idx       int
 	playing   bool
 	finished  bool
-	wpm       int
+	wpm       int // target (saved) speed
 	chunkSize int
 	adaptive  bool
 	themeName string
 	showHelp  bool
+
+	// Warm-up ramp state. When ramping, playback runs at rampWPM and accelerates
+	// toward wpm; rampCount tracks chunks since the last increment.
+	warmup    bool
+	ramping   bool
+	rampWPM   int
+	rampCount int
 
 	// hasDoc is false when rat is launched with no file/stdin: the reader shows
 	// an empty prompt and waits for the user to pick a file. browsing is true
@@ -71,11 +86,56 @@ func New(tokens []parser.Token, cfg config.Config) Model {
 		chunkSize: cfg.ChunkSize,
 		adaptive:  cfg.Adaptive,
 		themeName: cfg.Theme,
+		warmup:    cfg.Warmup,
 		cfg:       cfg,
 	}
 	m.chunks = reader.Group(tokens, m.chunkSize)
 	m.prog = newProgress(theme.Get(m.themeName))
+
+	// Start the warm-up ramp only when it's enabled and there's headroom above
+	// the default speed to ramp through.
+	m.rampWPM = m.wpm
+	if m.warmup && m.wpm > config.DefaultWPM {
+		m.ramping = true
+		m.rampWPM = config.DefaultWPM
+	}
 	return m
+}
+
+// effectiveWPM is the speed playback currently runs at: the ramp speed while
+// warming up, otherwise the target speed.
+func (m Model) effectiveWPM() int {
+	if m.ramping {
+		return m.rampWPM
+	}
+	return m.wpm
+}
+
+// stepRamp nudges the warm-up speed toward the target as each chunk is read,
+// ending the ramp once the target is reached.
+func (m *Model) stepRamp() {
+	if !m.ramping {
+		return
+	}
+	m.rampCount++
+	if m.rampCount < rampStepEvery {
+		return
+	}
+	m.rampCount = 0
+	m.rampWPM += rampStep
+	if m.rampWPM >= m.wpm {
+		m.rampWPM = m.wpm
+		m.ramping = false
+	}
+}
+
+// syncRamp keeps the ramp consistent after the target speed changes: if the ramp
+// has caught up to (or passed) the new target, warm-up is done.
+func (m *Model) syncRamp() {
+	if m.ramping && m.rampWPM >= m.wpm {
+		m.rampWPM = m.wpm
+		m.ramping = false
+	}
 }
 
 // newProgress builds a static (non-animated) progress bar coloured for the
@@ -102,7 +162,7 @@ func (m Model) scheduleTick() tea.Cmd {
 	if !m.playing || m.finished || m.browsing || !m.hasDoc || len(m.chunks) == 0 {
 		return nil
 	}
-	d := reader.Delay(m.chunks[m.idx], m.wpm, m.adaptive)
+	d := reader.Delay(m.chunks[m.idx], m.effectiveWPM(), m.adaptive)
 	ep := m.epoch
 	return tea.Tick(d, func(time.Time) tea.Msg { return tickMsg{epoch: ep} })
 }
@@ -187,6 +247,7 @@ func (m Model) advance() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.idx++
+	m.stepRamp()
 	return m, m.scheduleTick()
 }
 
@@ -238,10 +299,12 @@ func (m Model) handleKey(key string) (tea.Model, tea.Cmd) {
 
 	case keyFaster:
 		m.wpm = clamp(m.wpm+wpmStep, config.MinWPM, config.MaxWPM)
+		m.syncRamp()
 		m.save()
 		return m, m.invalidate()
 	case keySlower:
 		m.wpm = clamp(m.wpm-wpmStep, config.MinWPM, config.MaxWPM)
+		m.syncRamp()
 		m.save()
 		return m, m.invalidate()
 
@@ -328,6 +391,7 @@ func (m *Model) save() {
 	m.cfg.ChunkSize = m.chunkSize
 	m.cfg.Theme = m.themeName
 	m.cfg.Adaptive = m.adaptive
+	m.cfg.Warmup = m.warmup
 	_ = m.cfg.Save()
 }
 

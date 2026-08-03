@@ -113,6 +113,7 @@ changes are — see below).
 | `--chunk N`  | words per flash, 1–3                                    |
 | `--theme S`  | `dark`, `light`, `solarized`, or `high-contrast`       |
 | `--adaptive B` | `true`/`false` — pacing that pauses at punctuation   |
+| `--warmup B` | `true`/`false` — ramp up to the saved speed from 300 wpm |
 | `--version`  | print version and exit                                 |
 
 ```sh
@@ -149,6 +150,17 @@ top of the base per-word time it:
 The result reads with the natural rhythm of the prose. Toggle it with `a` to
 feel the difference.
 
+## Warm-up
+
+On by default, `rat` eases you in rather than dropping you straight at your saved
+speed. Playback starts at **300 wpm** and steps up 25 wpm at a time until it
+reaches your target. While it's accelerating, the speed in the status line reads
+`350↗500 wpm` in the accent colour; once it reaches the target it settles to the
+plain `500 wpm`.
+
+If your saved speed is 300 wpm or slower there's nothing to ramp, so it just
+starts there. Turn it off with `--warmup false` (persisted).
+
 ## Configuration
 
 Preferences live in an XDG TOML file:
@@ -166,9 +178,10 @@ wpm = 350
 chunk_size = 1
 theme = "light"
 adaptive = true
+warmup = true
 ```
 
-Defaults: `wpm 300`, `chunk_size 1`, `theme dark`, `adaptive true`.
+Defaults: `wpm 300`, `chunk_size 1`, `theme dark`, `adaptive true`, `warmup true`.
 
 ## Development
 

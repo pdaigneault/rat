@@ -49,6 +49,7 @@ func run() error {
 	chunk := flag.Int("chunk", 0, "words per flash (1-3)")
 	themeName := flag.String("theme", "", "colour theme: dark, light, solarized, high-contrast")
 	adaptive := flag.String("adaptive", "", "adaptive pacing: true or false")
+	warmup := flag.String("warmup", "", "warm-up ramp to saved speed: true or false")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = usage
 	flag.Parse()
@@ -62,7 +63,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("loading config: %w", err)
 	}
-	applyFlags(&cfg, *wpm, *chunk, *themeName, *adaptive)
+	applyFlags(&cfg, *wpm, *chunk, *themeName, *adaptive, *warmup)
 
 	tokens, ttyInput, err := loadInput(flag.Arg(0))
 	if err != nil {
@@ -125,7 +126,7 @@ func loadInput(arg string) (tokens []parser.Token, ttyInput *os.File, err error)
 
 // applyFlags overlays any explicitly-set flags onto the config, clamping to the
 // valid ranges so bad flag values cannot break the reader.
-func applyFlags(cfg *config.Config, wpm, chunk int, themeName, adaptive string) {
+func applyFlags(cfg *config.Config, wpm, chunk int, themeName, adaptive, warmup string) {
 	if wpm != 0 {
 		cfg.WPM = clamp(wpm, config.MinWPM, config.MaxWPM)
 	}
@@ -135,11 +136,20 @@ func applyFlags(cfg *config.Config, wpm, chunk int, themeName, adaptive string) 
 	if themeName != "" {
 		cfg.Theme = themeName
 	}
-	switch strings.ToLower(adaptive) {
+	cfg.Adaptive = parseBool(adaptive, cfg.Adaptive)
+	cfg.Warmup = parseBool(warmup, cfg.Warmup)
+}
+
+// parseBool interprets a truthy/falsy flag string, returning cur when the flag
+// was not set (empty) or unrecognised.
+func parseBool(s string, cur bool) bool {
+	switch strings.ToLower(s) {
 	case "true", "1", "on", "yes":
-		cfg.Adaptive = true
+		return true
 	case "false", "0", "off", "no":
-		cfg.Adaptive = false
+		return false
+	default:
+		return cur
 	}
 }
 
@@ -167,6 +177,7 @@ Flags:
   --chunk N      words per flash (1-3)
   --theme NAME   dark | light | solarized | high-contrast
   --adaptive B   true or false — longer pauses at punctuation and long words
+  --warmup B     true or false — ramp up to the saved speed from 300 wpm
 
 Controls (in-reader, press ? for the full list):
   space play/pause · ←/→ seek · ↑/↓ speed · [ ] chunk · t theme · a adaptive · f file · q quit
