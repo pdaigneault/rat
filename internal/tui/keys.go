@@ -4,7 +4,7 @@ package tui
 // them here as named constants gives the Update switch and the help footer a
 // single source of truth.
 const (
-	keyPlayPause    = " " // space
+	keyPlayPause    = "space" // Bubble Tea v2 stringifies the space key as "space", not " "
 	keyQuit         = "q"
 	keyQuitCtrl     = "ctrl+c"
 	keySeekBack     = "left"
