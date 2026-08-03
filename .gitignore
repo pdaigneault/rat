@@ -1,5 +1,5 @@
-# Compiled binary (built by `make build` / `go build -o rat`)
-/rat
+# Compiled binary output directory (make build -> ./bin/rat)
+/bin/
 
 # Test & coverage output
 coverage.out
