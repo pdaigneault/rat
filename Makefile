@@ -74,6 +74,11 @@ check: fmt-check vet test
 install:
 	$(GO) install -ldflags '$(LDFLAGS)' $(MAIN)
 
+## uninstall: remove the installed binary from GOBIN (or GOPATH/bin)
+.PHONY: uninstall
+uninstall:
+	rm -f $(INSTALL_DIR)/rat
+
 ## clean: remove build artefacts
 .PHONY: clean
 clean:

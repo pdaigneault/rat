@@ -178,6 +178,7 @@ Flags:
   --theme NAME   dark | light | solarized | high-contrast
   --adaptive B   true or false — longer pauses at punctuation and long words
   --warmup B     true or false — ramp up to the saved speed from 300 wpm
+  --version      print version and exit
 
 Controls (in-reader, press ? for the full list):
   space play/pause · ←/→ seek · ↑/↓ speed · [ ] chunk · t theme · a adaptive · f file · q quit
