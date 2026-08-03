@@ -85,17 +85,85 @@ func (m Model) renderEmpty(th theme.Theme) string {
 	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, block)
 }
 
-// renderBrowser draws the file picker with a title, a hint, and any transient
-// notice (such as an unreadable-file message).
+// browserWidth is the fixed width of the file-explorer panel.
+const browserWidth = 52
+
+// renderBrowser draws the file explorer: the current directory, the filtered
+// entry list with a cursor, a key hint, and any transient notice.
 func (m Model) renderBrowser(th theme.Theme) string {
 	dim := lipgloss.NewStyle().Foreground(th.Dim)
-	title := lipgloss.NewStyle().Foreground(th.Frame).Bold(true).Render("Select a file")
-	hint := dim.Render("md · txt   ↑↓ move · enter open · esc cancel")
-	parts := []string{title, hint, "", m.picker.View()}
-	if m.notice != "" {
-		parts = append(parts, "", lipgloss.NewStyle().Foreground(th.Pivot).Render(m.notice))
+	dirStyle := lipgloss.NewStyle().Foreground(th.Frame).Bold(true)
+	cursorStyle := lipgloss.NewStyle().Foreground(th.Pivot).Bold(true)
+	pivotStyle := lipgloss.NewStyle().Foreground(th.Pivot)
+
+	e := m.explorer
+	header := dirStyle.Render(truncLeft(compactPath(e.dir), browserWidth-2))
+	hint := dim.Render("↑↓ move · → open · ← up · enter select · esc cancel")
+
+	// Reserve rows for the header, hint, notice and padding.
+	maxRows := m.h - 8
+	if maxRows < 3 {
+		maxRows = 3
 	}
-	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, strings.Join(parts, "\n"))
+	start, end := scrollWindow(e.cursor, len(e.entries), maxRows)
+
+	var rows []string
+	if len(e.entries) == 0 {
+		rows = append(rows, dim.Render("(no folders or supported files here)"))
+	}
+	for i := start; i < end; i++ {
+		en := e.entries[i]
+		label := en.name
+		if en.isDir {
+			label += "/"
+		}
+		style := lipgloss.NewStyle().Foreground(th.Text)
+		if en.isDir {
+			style = lipgloss.NewStyle().Foreground(th.Frame)
+		}
+		prefix := "  "
+		if i == e.cursor {
+			prefix = cursorStyle.Render("▸ ")
+			style = style.Bold(true)
+		}
+		rows = append(rows, prefix+style.Render(label))
+	}
+
+	parts := []string{header, "", strings.Join(rows, "\n"), "", hint}
+	if e.failed != "" {
+		parts = append(parts, pivotStyle.Render(e.failed))
+	}
+	if m.notice != "" {
+		parts = append(parts, pivotStyle.Render(m.notice))
+	}
+	panel := lipgloss.NewStyle().Width(min(browserWidth, m.w)).Render(strings.Join(parts, "\n"))
+	return lipgloss.Place(m.w, m.h, lipgloss.Center, lipgloss.Center, panel)
+}
+
+// scrollWindow returns the [start,end) slice of a list of length n to display in
+// rows lines, keeping the cursor roughly centred.
+func scrollWindow(cursor, n, rows int) (int, int) {
+	if n <= rows {
+		return 0, n
+	}
+	start := cursor - rows/2
+	if start < 0 {
+		start = 0
+	}
+	if start+rows > n {
+		start = n - rows
+	}
+	return start, start + rows
+}
+
+// truncLeft trims s from the left to at most max display columns, prefixing an
+// ellipsis — so a long path keeps its most specific (rightmost) part visible.
+func truncLeft(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	return "…" + string(r[len(r)-(max-1):])
 }
 
 // renderWord lays out the current chunk with its pivot rune highlighted and the

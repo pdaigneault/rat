@@ -76,17 +76,18 @@ func TestEmptyStartNoPlayback(t *testing.T) {
 	}
 }
 
-// TestBrowseKeyOpensPicker confirms f opens the file picker from the empty state.
+// TestBrowseKeyOpensPicker confirms f opens the file explorer from the empty
+// state, with the current directory loaded.
 func TestBrowseKeyOpensPicker(t *testing.T) {
 	m := New(nil, config.Defaults())
 	fKey := tea.KeyPressMsg{Code: 'f', Text: "f"}
-	updated, cmd := m.Update(fKey)
+	updated, _ := m.Update(fKey)
 	m2 := updated.(Model)
 	if !m2.browsing {
-		t.Error("f should open the file picker (browsing=true)")
+		t.Error("f should open the file explorer (browsing=true)")
 	}
-	if cmd == nil {
-		t.Error("opening the picker should return an init command to read the directory")
+	if m2.explorer.dir == "" {
+		t.Error("opening the explorer should load a starting directory")
 	}
 }
 

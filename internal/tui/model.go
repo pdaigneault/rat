@@ -3,10 +3,8 @@
 package tui
 
 import (
-	"os"
 	"time"
 
-	"charm.land/bubbles/v2/filepicker"
 	"charm.land/bubbles/v2/progress"
 	tea "charm.land/bubbletea/v2"
 
@@ -45,11 +43,11 @@ type Model struct {
 
 	// hasDoc is false when rat is launched with no file/stdin: the reader shows
 	// an empty prompt and waits for the user to pick a file. browsing is true
-	// while the file picker is open.
+	// while the file explorer is open.
 	hasDoc   bool
 	browsing bool
-	picker   filepicker.Model
-	notice   string // transient message shown in the picker (e.g. a read error)
+	explorer explorer
+	notice   string // transient message shown in the explorer (e.g. a read error)
 
 	epoch int // bumped whenever timing is invalidated; guards stale ticks
 
@@ -77,18 +75,7 @@ func New(tokens []parser.Token, cfg config.Config) Model {
 	}
 	m.chunks = reader.Group(tokens, m.chunkSize)
 	m.prog = newProgress(theme.Get(m.themeName))
-	m.picker = newPicker()
 	return m
-}
-
-// newPicker builds a file picker filtered to rat's supported file types.
-func newPicker() filepicker.Model {
-	fp := filepicker.New()
-	fp.AllowedTypes = parser.SupportedExtensions
-	if wd, err := os.Getwd(); err == nil {
-		fp.CurrentDirectory = wd
-	}
-	return fp
 }
 
 // newProgress builds a static (non-animated) progress bar coloured for the
@@ -135,8 +122,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.w, m.h = msg.Width, msg.Height
 		m.ready = true
 		m.prog.SetWidth(min(frameWidth, m.w))
-		// The picker sizes itself from the window (AutoHeight).
-		m.picker, _ = m.picker.Update(msg)
 		return m, nil
 
 	case tickMsg:
@@ -151,46 +136,46 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m.handleKey(msg.String())
 	}
-
-	// While browsing, non-key messages (directory reads, etc.) drive the picker.
-	if m.browsing {
-		var cmd tea.Cmd
-		m.picker, cmd = m.picker.Update(msg)
-		return m, cmd
-	}
 	return m, nil
 }
 
-// updateBrowsing handles input while the file picker is open: esc cancels back
-// to the previous state, selecting a supported file loads it and starts reading,
-// and everything else drives the picker (navigation).
+// updateBrowsing handles input while the file explorer is open: esc cancels back
+// to the previous state, navigation keys move around the tree, and enter either
+// descends into a directory or loads the chosen file and starts reading.
 func (m Model) updateBrowsing(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	if msg.String() == keyQuitEsc {
+	switch msg.String() {
+	case keyQuitEsc:
 		m.browsing = false
 		m.notice = ""
 		return m, m.scheduleTick() // resume playback if a doc was already loaded
-	}
 
-	var cmd tea.Cmd
-	m.picker, cmd = m.picker.Update(msg)
+	case "up", "k", "ctrl+p":
+		m.explorer.moveUp()
+	case "down", "j", "ctrl+n":
+		m.explorer.moveDown()
+	case "left", "h", "backspace":
+		m.explorer.ascend()
 
-	if ok, path := m.picker.DidSelectFile(msg); ok {
-		tokens, err := parser.ParseFile(path)
-		if err != nil || len(tokens) == 0 {
-			m.notice = "can't read that file — pick another"
-			return m, cmd
+	case "enter", "right", "l":
+		if path, selected := m.explorer.enter(); selected {
+			tokens, err := parser.ParseFile(path)
+			if err != nil || len(tokens) == 0 {
+				m.notice = "can't read that file — pick another"
+				return m, nil
+			}
+			m.tokens = tokens
+			m.chunks = reader.Group(tokens, m.chunkSize)
+			m.idx = 0
+			m.finished = false
+			m.hasDoc = true
+			m.playing = true
+			m.browsing = false
+			m.notice = ""
+			return m, m.invalidate()
 		}
-		m.tokens = tokens
-		m.chunks = reader.Group(tokens, m.chunkSize)
-		m.idx = 0
-		m.finished = false
-		m.hasDoc = true
-		m.playing = true
-		m.browsing = false
-		m.notice = ""
-		return m, m.invalidate()
+		m.notice = "" // descended into a directory
 	}
-	return m, cmd
+	return m, nil
 }
 
 // advance moves to the next chunk, stopping (and pausing) at the end.
@@ -280,12 +265,13 @@ func (m Model) handleKey(key string) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// openPicker suspends playback and opens the file picker over the current view.
+// openPicker suspends playback and opens the file explorer over the current view.
 func (m Model) openPicker() (tea.Model, tea.Cmd) {
 	m.browsing = true
 	m.notice = ""
+	m.explorer = newExplorer(startDir())
 	m.epoch++ // invalidate any in-flight playback tick while browsing
-	return m, m.picker.Init()
+	return m, nil
 }
 
 // seek jumps to a chunk index, clamping to range and clearing the finished flag.
