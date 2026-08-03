@@ -14,6 +14,12 @@ func withTempConfig(t *testing.T) {
 	xdg.Reload()
 }
 
+func TestDefaultsWarmupOn(t *testing.T) {
+	if !Defaults().Warmup {
+		t.Error("warmup should default to on")
+	}
+}
+
 func TestLoadMissingReturnsDefaults(t *testing.T) {
 	withTempConfig(t)
 	got, err := Load()

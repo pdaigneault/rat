@@ -25,6 +25,7 @@ const (
 
 	DefaultTheme    = "dark"
 	DefaultAdaptive = true
+	DefaultWarmup   = true
 )
 
 // Config is the persisted preference set. TOML keys are lower-case field names.
@@ -33,6 +34,7 @@ type Config struct {
 	ChunkSize int    `toml:"chunk_size"`
 	Theme     string `toml:"theme"`
 	Adaptive  bool   `toml:"adaptive"`
+	Warmup    bool   `toml:"warmup"`
 }
 
 // Defaults returns a Config populated with the built-in defaults.
@@ -42,6 +44,7 @@ func Defaults() Config {
 		ChunkSize: DefaultChunk,
 		Theme:     DefaultTheme,
 		Adaptive:  DefaultAdaptive,
+		Warmup:    DefaultWarmup,
 	}
 }
 

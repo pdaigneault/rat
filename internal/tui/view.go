@@ -57,7 +57,7 @@ func (m Model) render(th theme.Theme) string {
 		botGuide,
 		"",
 		bar,
-		dimStyle.Render(m.statLine()),
+		m.statLine(th),
 	}
 	lines = append(lines, m.footer(dimStyle)...)
 
@@ -181,8 +181,11 @@ func (m Model) renderWord(th theme.Theme, textStyle, pivotStyle lipgloss.Style) 
 }
 
 // statLine is the single-line status: speed, position, percent, theme, mode and
-// a play-state glyph.
-func (m Model) statLine() string {
+// a play-state glyph. While warming up, the speed reads "current↗target" in the
+// accent colour to show playback is accelerating to the saved speed.
+func (m Model) statLine(th theme.Theme) string {
+	dim := lipgloss.NewStyle().Foreground(th.Dim)
+
 	pct := int(float64(m.idx+1) / float64(len(m.chunks)) * 100)
 	mode := "steady"
 	if m.adaptive {
@@ -195,8 +198,17 @@ func (m Model) statLine() string {
 	case !m.playing:
 		state = "⏸"
 	}
-	return fmt.Sprintf("%s  %d wpm · %d/%d · %d%% · %s · %s",
-		state, m.wpm, m.idx+1, len(m.chunks), pct, m.themeName, mode)
+
+	var speed string
+	if m.ramping {
+		accent := lipgloss.NewStyle().Foreground(th.Pivot).Bold(true)
+		speed = accent.Render(fmt.Sprintf("%d↗%d wpm", m.effectiveWPM(), m.wpm))
+	} else {
+		speed = dim.Render(fmt.Sprintf("%d wpm", m.wpm))
+	}
+
+	rest := fmt.Sprintf("%d/%d · %d%% · %s · %s", m.idx+1, len(m.chunks), pct, m.themeName, mode)
+	return dim.Render(state+"  ") + speed + dim.Render(" · "+rest)
 }
 
 // footer returns the help lines. Collapsed, it is a one-line hint; expanded (via
